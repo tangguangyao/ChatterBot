@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .response import Response
+from fuzzywuzzy import fuzz
 
 
 class Statement(object):
@@ -82,6 +83,13 @@ class Statement(object):
                 return response.occurrence
 
         return 0
+
+    def get_stemmed_text(self):
+        # TODO
+        pass
+
+    def compare_to(self, other_statement):
+        return fuzz.ratio(self.text, other_statement.text)
 
     def serialize(self):
         """
