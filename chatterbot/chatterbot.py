@@ -30,6 +30,15 @@ class ChatBot(object):
             'chatterbot.adapters.output.OutputFormatAdapter'
         )
 
+        # add by yao
+        self.confidence_min_rate = kwargs.get(
+            "confidence_min_rate", 0
+        )
+        # add by yao
+        self.unknown_answer = kwargs.get(
+            "unknown_answer", "sorry, I don't know"
+        )
+
         # The last 10 statement inputs and outputs
         self.recent_statements = ResponseQueue(maxsize=10)
 
@@ -196,6 +205,9 @@ class ChatBot(object):
 
         # Select a response to the input statement
         confidence, response = self.logic.process(input_statement)
+        # add buy yao
+        if confidence < self.confidence_min_rate:
+            response.text = self.unknown_answer
         self.logger.info(u'Selecting "{}" as response with a confidence of {}'.format(response.text, confidence))
 
         if input_statement.extra_data:

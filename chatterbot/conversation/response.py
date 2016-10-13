@@ -1,3 +1,5 @@
+from chatterbot.utils.text_tag import get_tag
+
 class Response(object):
     """
     A response represents an entity which response to a statement.
@@ -5,6 +7,7 @@ class Response(object):
 
     def __init__(self, text, **kwargs):
         self.text = text
+        self.tag = get_tag(text)
         self.occurrence = kwargs.get("occurrence", 1)
 
     def __str__(self):
@@ -26,6 +29,7 @@ class Response(object):
         data = {}
 
         data["text"] = self.text
+        data["tag"] = self.tag
         data["occurrence"] = self.occurrence
 
         return data

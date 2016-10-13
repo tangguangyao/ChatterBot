@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from .response import Response
-
+from chatterbot.utils.text_tag import get_tag
 
 class Statement(object):
     """
@@ -10,6 +10,7 @@ class Statement(object):
 
     def __init__(self, text, **kwargs):
         self.text = text
+        self.tag = get_tag(text)
         self.in_response_to = kwargs.get("in_response_to", [])
 
         self.extra_data = {}
@@ -90,6 +91,7 @@ class Statement(object):
         data = {}
 
         data["text"] = self.text
+        data["tag"] = self.tag
         data["in_response_to"] = []
         data.update(self.extra_data)
 

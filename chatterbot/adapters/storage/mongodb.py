@@ -1,6 +1,7 @@
 from chatterbot.adapters.storage import StorageAdapter
 from chatterbot.conversation import Statement, Response
 from pymongo import MongoClient
+from chatterbot.utils.text_tag import get_tag
 
 
 class Query(object):
@@ -231,15 +232,19 @@ class MongoDatabaseAdapter(StorageAdapter):
 
         self.statements.delete_one({'text': statement_text})
 
-    def get_response_statements(self):
+    def get_response_statements(self, text):
         """
         Return only statements that are in response to another statement.
         A statement must exist which lists the closest matching statement in the
         in_response_to field. Otherwise, the logic adapter may find a closest
         matching statement that does not have a known response.
         """
-        response_query = self.statements.distinct('in_response_to.text')
-
+        tag = get_tag(text)
+        if tag != '':
+            response_query = self.statements.distinct('in_response_to.text', {'in_response_to.tag': tag })
+        else:
+            response_query = self.statements.distinct('in_response_to.text')
+        # response_query = self.statements.distinct('in_response_to.text')
         _statement_query = {
             'text': {
                 '$in': response_query
