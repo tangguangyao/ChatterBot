@@ -240,27 +240,51 @@ class MongoDatabaseAdapter(StorageAdapter):
         matching statement that does not have a known response.
         """
         tag = get_tag(text)
-        if tag != '':
-            response_query = self.statements.distinct('in_response_to.text', {'in_response_to.tag': tag })
-        else:
-            response_query = self.statements.distinct('in_response_to.text')
-        # response_query = self.statements.distinct('in_response_to.text')
-        _statement_query = {
-            'text': {
-                '$in': response_query
-            }
+
+        andTag = [{'in_response_to': []}]
+        # 正确率太低
+        # inTag = []
+        # _statement_query_tag_in = {
+        #     '$and': [{'in_response_to': []}, {'tag': { '$in': tag }}]
+        # }
+
+        for kw in tag:
+            andTag.append({'tag': kw})
+
+        _statement_query_tag = {
+            '$and': andTag
         }
 
-        _statement_query.update(self.base_query.value())
+        _statement_query_tag.update(self.base_query.value())
 
-        statement_query = self.statements.find(_statement_query)
+        if len(tag) != 0:
+            response_query = self.statements.find(_statement_query_tag)
+        else:
+            # 如果一个标签都没有命中，表示没有什么意义
+            response_query = []
+        statement_o = []
+        for statement1 in list(response_query):
+            statement_o.append(self.mongo_to_object(statement1))
 
-        statement_objects = []
+        return statement_o
 
-        for statement in list(statement_query):
-            statement_objects.append(self.mongo_to_object(statement))
+        # 原始逻辑
+        # _statement_query = {
+        #     'text': {
+        #         '$in': response_query
+        #     }
+        # }
 
-        return statement_objects
+        # _statement_query.update(self.base_query.value())
+
+        # statement_query = self.statements.find(_statement_query)
+
+        # statement_objects = []
+
+        # for statement in list(statement_query):
+        #     statement_objects.append(self.mongo_to_object(statement))
+
+        # return statement_objects
 
     def drop(self):
         """

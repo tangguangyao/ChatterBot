@@ -25,8 +25,7 @@ class ClosestMeaningAdapter(BaseMatchAdapter):
         Takes a statement string and a list of statement strings.
         Returns the closest matching statement from the list.
         """
-        statement_list = self.context.storage.get_response_statements()
-
+        statement_list = self.context.storage.get_response_statements(input_statement.text)
         if not statement_list:
             if self.has_storage_context:
                 # Use a randomly picked statement
