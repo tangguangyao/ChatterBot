@@ -17,7 +17,6 @@ class ClosestMatchAdapter(BaseMatchAdapter):
         Returns the closest matching statement from the list.
         """
         statement_list = self.context.storage.get_response_statements(input_statement.text)
-
         if not statement_list:
             if self.has_storage_context:
                 # Use a randomly picked statement
@@ -34,11 +33,19 @@ class ClosestMatchAdapter(BaseMatchAdapter):
 
         # Find the closest matching known statement
         for statement in statement_list:
-            similarity = self.compare_statements(input_statement, statement)
-
+            # print('input_statement, statement', input_statement, statement)
+            text = statement['text']
+            tagDiff = statement['tagDiff']
+            pDff = statement['pDff']
+            similarity = self.compare_statements(input_statement, text)
+            # 根据标签匹配度，处理相似度
+            if tagDiff == 0:
+                similarity = similarity + 20
+            elif pDff < 0.3:
+                similarity = similarity + 8
             if similarity > closest_similarity:
                 closest_similarity = similarity
-                closest_match = statement
+                closest_match = text
 
         # Convert the confidence integer to a percent
         confidence = closest_similarity / 100.0

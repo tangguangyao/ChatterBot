@@ -3,7 +3,6 @@ from chatterbot.conversation import Statement, Response
 from pymongo import MongoClient
 from chatterbot.utils.text_tag import get_tag
 
-
 class Query(object):
 
     def __init__(self, query={}):
@@ -240,31 +239,32 @@ class MongoDatabaseAdapter(StorageAdapter):
         matching statement that does not have a known response.
         """
         tag = get_tag(text)
-
         andTag = [{'in_response_to': []}]
-        # 正确率太低
-        # inTag = []
-        # _statement_query_tag_in = {
-        #     '$and': [{'in_response_to': []}, {'tag': { '$in': tag }}]
-        # }
 
         for kw in tag:
             andTag.append({'tag': kw})
-
         _statement_query_tag = {
             '$and': andTag
         }
 
         _statement_query_tag.update(self.base_query.value())
-
         if len(tag) != 0:
             response_query = self.statements.find(_statement_query_tag)
         else:
             # 如果一个标签都没有命中，表示没有什么意义
             response_query = []
         statement_o = []
-        for statement1 in list(response_query):
-            statement_o.append(self.mongo_to_object(statement1))
+        
+        for statement in list(response_query):
+            if len(statement['tag']) >= len(tag):
+                tagDiff = set(statement['tag']) - set(tag)
+                pDff = len(tagDiff) / len(statement['tag'])
+            else:
+                tagDiff = set(tag) - set(statement['tag'])
+                pDff = len(tagDiff) / set(tag)
+            obj = {'tagDiff': len(tagDiff),'pDff': pDff, 'text': self.mongo_to_object(statement)}
+            statement_o.append(obj)
+            # statement_o.append(self.mongo_to_object(statement))
 
         return statement_o
 
