@@ -2,6 +2,7 @@ from chatterbot.adapters.storage import StorageAdapter
 from chatterbot.conversation import Statement, Response
 from pymongo import MongoClient
 from chatterbot.utils.text_tag import get_tag
+from chatterbot.utils.text_tag import get_tag_weight
 
 class Query(object):
 
@@ -243,6 +244,7 @@ class MongoDatabaseAdapter(StorageAdapter):
 
         for kw in tag:
             andTag.append({'tag': kw})
+
         _statement_query_tag = {
             '$and': andTag
         }
@@ -250,21 +252,54 @@ class MongoDatabaseAdapter(StorageAdapter):
         _statement_query_tag.update(self.base_query.value())
         if len(tag) != 0:
             response_query = self.statements.find(_statement_query_tag)
+            response_query_list = list(response_query)
+            # 如果标签没有匹配的，可能标签有超过，使用标签diff差最小的一个
+            if (len(response_query_list) == 0) and (len(tag) > 3):
+                kw_weight = get_tag_weight()
+                similar_tag = [{'in_response_to': []}]
+                light_tag = []
+                for kw in tag:
+                    if kw in kw_weight:
+                        similar_tag.append({'tag': kw})
+                    else:
+                        light_tag.append(kw)
+                if len(light_tag) > 0:
+                    similar_tag.append({'tag': {'$in': light_tag}})
+
+                _statement_query_tag_in = {
+                    '$and': similar_tag
+                }
+                response_query_similar = self.statements.find(_statement_query_tag_in)
+                minDiff = int(100)
+                minquery = {100: []}
+                for statement in response_query_similar:
+                    if len(statement['tag']) >= len(tag):
+                        tagDiff = len(set(statement['tag']) - set(tag))
+                        pDff = tagDiff / len(statement['tag'])
+                    else:
+                        tagDiff = len(set(tag) - set(statement['tag']))
+                        pDff = tagDiff / len(set(tag))
+                    if tagDiff <= minDiff:
+                        minDiff = tagDiff
+                        if not tagDiff in minquery:
+                            minquery[tagDiff] = []
+                        obj = {'tagDiff': tagDiff,'pDff': pDff, 'text': self.mongo_to_object(statement), 'strict': True}
+                        minquery[tagDiff].append(obj)
+                return minquery[minDiff]
         else:
             # 如果一个标签都没有命中，表示没有什么意义
-            response_query = []
+            response_query_list = []
         statement_o = []
         
-        for statement in list(response_query):
+        for statement in response_query_list:
             if len(statement['tag']) >= len(tag):
                 tagDiff = set(statement['tag']) - set(tag)
                 pDff = len(tagDiff) / len(statement['tag'])
             else:
                 tagDiff = set(tag) - set(statement['tag'])
-                pDff = len(tagDiff) / set(tag)
+                pDff = len(tagDiff) / len(set(tag))
             obj = {'tagDiff': len(tagDiff),'pDff': pDff, 'text': self.mongo_to_object(statement)}
             statement_o.append(obj)
-            # statement_o.append(self.mongo_to_object(statement))
 
         return statement_o
 

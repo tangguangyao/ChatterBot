@@ -33,21 +33,25 @@ class ClosestMatchAdapter(BaseMatchAdapter):
 
         # Find the closest matching known statement
         for statement in statement_list:
-            # print('input_statement, statement', input_statement, statement)
             text = statement['text']
             tagDiff = statement['tagDiff']
             pDff = statement['pDff']
             similarity = self.compare_statements(input_statement, text)
             # 根据标签匹配度，处理相似度
-            if tagDiff == 0:
-                similarity = similarity + 20
-            elif pDff < 0.3:
-                similarity = similarity + 8
+            if 'strict' in statement:
+                similarity = similarity
+            else:
+                if tagDiff == 0:
+                    similarity = similarity + 22
+                elif pDff < 0.4:
+                    similarity = similarity + 8
+
             if similarity > closest_similarity:
                 closest_similarity = similarity
                 closest_match = text
+            # print(tagDiff, pDff, similarity, input_statement,text)
 
         # Convert the confidence integer to a percent
+        
         confidence = closest_similarity / 100.0
-
         return confidence, closest_match
