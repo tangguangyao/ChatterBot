@@ -253,8 +253,10 @@ class MongoDatabaseAdapter(StorageAdapter):
         if len(tag) != 0:
             response_query = self.statements.find(_statement_query_tag)
             response_query_list = list(response_query)
+            # print(tag, response_query_list)
             # 如果标签没有匹配的，可能标签有超过，使用标签diff差最小的一个
-            if (len(response_query_list) == 0) and (len(tag) > 3):
+            # 最开始是5，这个值越大，越容易匹配错误答案
+            if (len(response_query_list) == 0) and (len(tag) >= 3):
                 kw_weight = get_tag_weight()
                 similar_tag = [{'in_response_to': []}]
                 light_tag = []
@@ -272,7 +274,9 @@ class MongoDatabaseAdapter(StorageAdapter):
                 response_query_similar = self.statements.find(_statement_query_tag_in)
                 minDiff = int(100)
                 minquery = {100: []}
+
                 for statement in response_query_similar:
+                    # print(statement)
                     if len(statement['tag']) >= len(tag):
                         tagDiff = len(set(statement['tag']) - set(tag))
                         pDff = tagDiff / len(statement['tag'])
@@ -285,6 +289,7 @@ class MongoDatabaseAdapter(StorageAdapter):
                             minquery[tagDiff] = []
                         obj = {'tagDiff': tagDiff,'pDff': pDff, 'text': self.mongo_to_object(statement), 'strict': True}
                         minquery[tagDiff].append(obj)
+                # print(minquery)
                 return minquery[minDiff]
         else:
             # 如果一个标签都没有命中，表示没有什么意义

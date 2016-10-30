@@ -39,12 +39,20 @@ class ClosestMatchAdapter(BaseMatchAdapter):
             similarity = self.compare_statements(input_statement, text)
             # 根据标签匹配度，处理相似度
             if 'strict' in statement:
-                similarity = similarity
+                # similarity = similarity
+                if pDff < 0.3:
+                    similarity = similarity + 8
+                elif (pDff >= 0.3) and (pDff < 0.5):
+                    similarity = similarity + 3
             else:
                 if tagDiff == 0:
                     similarity = similarity + 22
-                elif pDff < 0.4:
+                elif pDff <= 0.25:
+                    similarity = similarity + 15
+                elif pDff < 0.4 and pDff > 0.25:
                     similarity = similarity + 8
+                # elif (pDff >= 0.3) and (pDff <= 0.5):
+                #     similarity = similarity + 2
 
             if similarity > closest_similarity:
                 closest_similarity = similarity
