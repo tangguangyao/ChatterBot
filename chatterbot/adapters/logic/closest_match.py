@@ -44,6 +44,8 @@ class ClosestMatchAdapter(BaseMatchAdapter):
                     similarity = similarity + 8
                 elif (pDff >= 0.3) and (pDff < 0.5):
                     similarity = similarity + 3
+                elif pDff >= 0.5:
+                    similarity = similarity - 2
             else:
                 if tagDiff == 0:
                     similarity = similarity + 22
@@ -51,8 +53,8 @@ class ClosestMatchAdapter(BaseMatchAdapter):
                     similarity = similarity + 15
                 elif pDff < 0.4 and pDff > 0.25:
                     similarity = similarity + 8
-                # elif (pDff >= 0.3) and (pDff <= 0.5):
-                #     similarity = similarity + 2
+                elif (pDff >= 0.3) and (pDff < 0.4):
+                    similarity = similarity + 2
 
             if similarity > closest_similarity:
                 closest_similarity = similarity
